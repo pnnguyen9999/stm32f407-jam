@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
 #include "i2c.h"
 #include "i2s.h"
 #include "spi.h"
@@ -66,6 +67,11 @@ void MX_USB_HOST_Process(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+int __io_putchar(int ch) {
+  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
+  return ch;
+}
 
 void lcd_send_cmd(uint8_t cmd) {
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // DC low
@@ -179,8 +185,12 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_HOST_Init();
   MX_USART2_UART_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 //  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+
+  HAL_ADC_Start(&hadc1);
+
   {
    const char msg[] = "kakakaka!\r\n";
    HAL_UART_Transmit(&huart2, (uint8_t*)msg, sizeof(msg)-1, HAL_MAX_DELAY);
@@ -190,18 +200,35 @@ int main(void)
 
   ST7735_Init();
   ST7735_FillScreen(ST7735_BLACK);
-  ST7735_WriteString(10, 10, "HELLO STM32", Font_11x18, ST7735_YELLOW, ST7735_BLACK);
+  ST7735_WriteString(0, 0, "init", Font_11x18, ST7735_YELLOW, ST7735_BLACK);
 
+  char buf[32];
+  uint32_t adc_val;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  ST7735_FillScreen(ST7735_RED);
-//	  ST7735_WriteString(10, 10, "HELLO STM32", Font_11x18, ST7735_RED, ST7735_BLACK);
-//	  HAL_Delay(1000);
-//	  ST7735_WriteString(10, 10, "HELLO", Font_11x18, ST7735_GREEN, ST7735_BLACK);
+	  // Bắt đầu ADC
+	     HAL_ADC_Start(&hadc1);
+
+	     // Đợi kết quả
+	     HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+
+	     // Lấy giá trị
+	     adc_val = HAL_ADC_GetValue(&hadc1);
+
+	     // Chuyển thành chuỗi
+	     sprintf(buf, "ADC: %lu", adc_val);
+
+	     // Xoá màn hình cũ
+	     ST7735_FillScreen(ST7735_BLACK);
+
+	     // In lên LCD
+	     ST7735_WriteString(0, 0, buf, Font_11x18, ST7735_YELLOW, ST7735_BLACK);
+
+	     HAL_Delay(200); // đỡ nhấp nháy
 
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
