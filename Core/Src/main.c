@@ -1,20 +1,20 @@
 /* USER CODE BEGIN Header */
 /**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2025 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
+ ******************************************************************************
+ * @file           : main.c
+ * @brief          : Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2025 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
@@ -69,218 +69,210 @@ void MX_USB_HOST_Process(void);
 /* USER CODE BEGIN 0 */
 
 int __io_putchar(int ch) {
-  HAL_UART_Transmit(&huart2, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
-  return ch;
+	HAL_UART_Transmit(&huart2, (uint8_t*) &ch, 1, HAL_MAX_DELAY);
+	return ch;
 }
 
 void lcd_send_cmd(uint8_t cmd) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // DC low
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
-  HAL_SPI_Transmit(&hspi1, &cmd, 1, HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // CS high
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // DC low
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
+	HAL_SPI_Transmit(&hspi1, &cmd, 1, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // CS high
 }
 
 // send 1 byte data
 void lcd_send_data(uint8_t data) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // DC high
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
-  HAL_SPI_Transmit(&hspi1, &data, 1, HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // CS high
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // DC high
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
+	HAL_SPI_Transmit(&hspi1, &data, 1, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // CS high
 }
 
 // send multiple byte data
 void lcd_send_data_array(uint8_t *data, uint16_t len) {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
-  HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
+	HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
 }
 
 void lcd_reset() {
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
-  HAL_Delay(10);
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
-  HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
+	HAL_Delay(10);
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
+	HAL_Delay(10);
 }
 
 void lcd_init() {
-  lcd_reset();
+	lcd_reset();
 
-  lcd_send_cmd(0x01); // Software reset
-  HAL_Delay(150);
+	lcd_send_cmd(0x01); // Software reset
+	HAL_Delay(150);
 
-  lcd_send_cmd(0x11); // Sleep out
-  HAL_Delay(150);
+	lcd_send_cmd(0x11); // Sleep out
+	HAL_Delay(150);
 
-  lcd_send_cmd(0x3A); // Color mode
-  lcd_send_data(0x05); // 16-bit
+	lcd_send_cmd(0x3A); // Color mode
+	lcd_send_data(0x05); // 16-bit
 
-  lcd_send_cmd(0x36); // MADCTL
-  lcd_send_data(0xC0); // <- MX + MY + RGB
+	lcd_send_cmd(0x36); // MADCTL
+	lcd_send_data(0xC0); // <- MX + MY + RGB
 
-  lcd_send_cmd(0x29); // Display on
-  HAL_Delay(10);
+	lcd_send_cmd(0x29); // Display on
+	HAL_Delay(10);
 }
 
 void lcd_fill_screen(uint16_t color) {
-  uint8_t hi = color >> 8;
-  uint8_t lo = color & 0xFF;
+	uint8_t hi = color >> 8;
+	uint8_t lo = color & 0xFF;
 
-  // Set address window
-  lcd_send_cmd(0x2A);
-  uint8_t data_x[] = { 0x00, 0x00, 0x00, 0x7F };
-  lcd_send_data_array(data_x, 4);
+	// Set address window
+	lcd_send_cmd(0x2A);
+	uint8_t data_x[] = { 0x00, 0x00, 0x00, 0x7F };
+	lcd_send_data_array(data_x, 4);
 
-  lcd_send_cmd(0x2B);
-  uint8_t data_y[] = { 0x00, 0x00, 0x00, 0x9F };
-  lcd_send_data_array(data_y, 4);
+	lcd_send_cmd(0x2B);
+	uint8_t data_y[] = { 0x00, 0x00, 0x00, 0x9F };
+	lcd_send_data_array(data_y, 4);
 
-  lcd_send_cmd(0x2C); // RAMWR
+	lcd_send_cmd(0x2C); // RAMWR
 
-  // send colors
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // DC high
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
+	// send colors
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // DC high
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
 
-  for (int i = 0; i < 128 * 160; i++) {
-    uint8_t pix[2] = { hi, lo };
-    HAL_SPI_Transmit(&hspi1, pix, 2, HAL_MAX_DELAY);
-  }
+	for (int i = 0; i < 128 * 160; i++) {
+		uint8_t pix[2] = { hi, lo };
+		HAL_SPI_Transmit(&hspi1, pix, 2, HAL_MAX_DELAY);
+	}
 
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // CS high
+	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // CS high
 }
 
 /* USER CODE END 0 */
 
 /**
-  * @brief  The application entry point.
-  * @retval int
-  */
-int main(void)
-{
+ * @brief  The application entry point.
+ * @retval int
+ */
+int main(void) {
 
-  /* USER CODE BEGIN 1 */
+	/* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
+	/* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
+	/* MCU Configuration--------------------------------------------------------*/
 
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
-  HAL_Init();
+	/* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+	HAL_Init();
 
-  /* USER CODE BEGIN Init */
+	/* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+	/* USER CODE END Init */
 
-  /* Configure the system clock */
-  SystemClock_Config();
+	/* Configure the system clock */
+	SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
+	/* USER CODE BEGIN SysInit */
 
-  /* USER CODE END SysInit */
+	/* USER CODE END SysInit */
 
-  /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_I2C1_Init();
-  MX_I2S3_Init();
-  MX_SPI1_Init();
-  MX_USB_HOST_Init();
-  MX_USART2_UART_Init();
-  MX_ADC1_Init();
-  /* USER CODE BEGIN 2 */
+	/* Initialize all configured peripherals */
+	MX_GPIO_Init();
+	MX_I2C1_Init();
+	MX_I2S3_Init();
+	MX_SPI1_Init();
+	MX_USB_HOST_Init();
+	MX_USART2_UART_Init();
+	MX_ADC1_Init();
+	/* USER CODE BEGIN 2 */
 //  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
+	HAL_ADC_Start(&hadc1);
 
-  HAL_ADC_Start(&hadc1);
+	{
+		const char msg[] = "kakakaka!\r\n";
+		HAL_UART_Transmit(&huart2, (uint8_t*) msg, sizeof(msg) - 1,
+		HAL_MAX_DELAY);
+	}
 
-  {
-   const char msg[] = "kakakaka!\r\n";
-   HAL_UART_Transmit(&huart2, (uint8_t*)msg, sizeof(msg)-1, HAL_MAX_DELAY);
-  }
+	HAL_Delay(200);
 
-  HAL_Delay(200);
+	ST7735_Init();
+	ST7735_FillScreen(ST7735_BLACK);
+	ST7735_WriteString(0, 0, "init abc xyz 123456789 987651236 %^@&#!*#!@#", Font_11x18, ST7735_YELLOW, ST7735_BLACK);
 
-  ST7735_Init();
-  ST7735_FillScreen(ST7735_BLACK);
-  ST7735_WriteString(0, 0, "init", Font_11x18, ST7735_YELLOW, ST7735_BLACK);
+//	void draw_moving_line(uint8_t y) {
+//		ST7735_FillScreen(ST7735_BLACK);
+//		ST7735_FillRectangle(0, y, ST7735_WIDTH, 2, ST7735_RED);
+//	}
 
-  char buf[32];
-  uint32_t adc_val;
-  /* USER CODE END 2 */
+	uint8_t last_y = 255;
+	/* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  // Bắt đầu ADC
-	     HAL_ADC_Start(&hadc1);
+	/* Infinite loop */
+	/* USER CODE BEGIN WHILE */
+	while (1) {
+		HAL_ADC_Start(&hadc1);
+		HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		uint16_t adcValue = HAL_ADC_GetValue(&hadc1);
+		uint8_t y = (adcValue * 158) / 4095;
 
-	     // Đợi kết quả
-	     HAL_ADC_PollForConversion(&hadc1, HAL_MAX_DELAY);
+		if (y != last_y) {
+			// Xoá đường cũ
+			ST7735_FillRectangle(0, last_y, ST7735_WIDTH, 2, ST7735_BLACK);
+			// Vẽ đường mới
+			ST7735_FillRectangle(0, y, ST7735_WIDTH, 2, ST7735_RED);
+			last_y = y;
+		}
 
-	     // Lấy giá trị
-	     adc_val = HAL_ADC_GetValue(&hadc1);
+		/* USER CODE END WHILE */
+		MX_USB_HOST_Process();
 
-	     // Chuyển thành chuỗi
-	     sprintf(buf, "ADC: %lu", adc_val);
-
-	     // Xoá màn hình cũ
-	     ST7735_FillScreen(ST7735_BLACK);
-
-	     // In lên LCD
-	     ST7735_WriteString(0, 0, buf, Font_11x18, ST7735_YELLOW, ST7735_BLACK);
-
-	     HAL_Delay(200); // đỡ nhấp nháy
-
-    /* USER CODE END WHILE */
-    MX_USB_HOST_Process();
-
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
+		/* USER CODE BEGIN 3 */
+	}
+	/* USER CODE END 3 */
 }
 
 /**
-  * @brief System Clock Configuration
-  * @retval None
-  */
-void SystemClock_Config(void)
-{
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+ * @brief System Clock Configuration
+ * @retval None
+ */
+void SystemClock_Config(void) {
+	RCC_OscInitTypeDef RCC_OscInitStruct = { 0 };
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = { 0 };
 
-  /** Configure the main internal regulator output voltage
-  */
-  __HAL_RCC_PWR_CLK_ENABLE();
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+	/** Configure the main internal regulator output voltage
+	 */
+	__HAL_RCC_PWR_CLK_ENABLE();
+	__HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 8;
-  RCC_OscInitStruct.PLL.PLLN = 336;
-  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
-  RCC_OscInitStruct.PLL.PLLQ = 7;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	/** Initializes the RCC Oscillators according to the specified parameters
+	 * in the RCC_OscInitTypeDef structure.
+	 */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+	RCC_OscInitStruct.HSEState = RCC_HSE_ON;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+	RCC_OscInitStruct.PLL.PLLM = 8;
+	RCC_OscInitStruct.PLL.PLLN = 336;
+	RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+	RCC_OscInitStruct.PLL.PLLQ = 7;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK) {
+		Error_Handler();
+	}
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+	/** Initializes the CPU, AHB and APB buses clocks
+	 */
+	RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK
+			| RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2;
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK) {
+		Error_Handler();
+	}
 }
 
 /* USER CODE BEGIN 4 */
@@ -288,18 +280,16 @@ void SystemClock_Config(void)
 /* USER CODE END 4 */
 
 /**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
-void Error_Handler(void)
-{
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
-  __disable_irq();
-  while (1)
-  {
-  }
-  /* USER CODE END Error_Handler_Debug */
+ * @brief  This function is executed in case of error occurrence.
+ * @retval None
+ */
+void Error_Handler(void) {
+	/* USER CODE BEGIN Error_Handler_Debug */
+	/* User can add his own implementation to report the HAL error return state */
+	__disable_irq();
+	while (1) {
+	}
+	/* USER CODE END Error_Handler_Debug */
 }
 
 #ifdef  USE_FULL_ASSERT
