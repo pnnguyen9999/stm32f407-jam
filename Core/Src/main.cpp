@@ -34,6 +34,7 @@
 #include "stm32f4xx_hal.h"
 #include "st7735.h"
 #include "fonts.h"
+#include "button.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -77,7 +78,7 @@ void MX_USB_HOST_Process(void);
 int main(void) {
 
 	/* USER CODE BEGIN 1 */
-
+	Button shitButton(GPIOE, GPIO_PIN_7);
 	/* USER CODE END 1 */
 
 	/* MCU Configuration--------------------------------------------------------*/
@@ -137,6 +138,11 @@ int main(void) {
 			// Vẽ đường mới
 			ST7735_FillRectangle(0, y, ST7735_WIDTH, 2, ST7735_RED);
 			last_y = y;
+		}
+
+		if (shitButton.wasPressed()) {
+			ST7735_WriteString(0, y-10, "Play pressed", Font_7x10, ST7735_GREEN,
+					ST7735_BLACK);
 		}
 
 		/* USER CODE END WHILE */

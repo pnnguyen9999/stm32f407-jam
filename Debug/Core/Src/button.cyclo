@@ -1,0 +1,3 @@
+../Core/Src/button.cpp:11:1:Button::Button(GPIO_TypeDef*, uint16_t)	1
+../Core/Src/button.cpp:16:6:bool Button::isPressed()	1
+../Core/Src/button.cpp:20:6:bool Button::wasPressed()	3
