@@ -68,87 +68,6 @@ void MX_USB_HOST_Process(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-int __io_putchar(int ch) {
-	HAL_UART_Transmit(&huart2, (uint8_t*) &ch, 1, HAL_MAX_DELAY);
-	return ch;
-}
-
-void lcd_send_cmd(uint8_t cmd) {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET); // DC low
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
-	HAL_SPI_Transmit(&hspi1, &cmd, 1, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // CS high
-}
-
-// send 1 byte data
-void lcd_send_data(uint8_t data) {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);   // DC high
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
-	HAL_SPI_Transmit(&hspi1, &data, 1, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);   // CS high
-}
-
-// send multiple byte data
-void lcd_send_data_array(uint8_t *data, uint16_t len) {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET);
-	HAL_SPI_Transmit(&hspi1, data, len, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET);
-}
-
-void lcd_reset() {
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_RESET);
-	HAL_Delay(10);
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, GPIO_PIN_SET);
-	HAL_Delay(10);
-}
-
-void lcd_init() {
-	lcd_reset();
-
-	lcd_send_cmd(0x01); // Software reset
-	HAL_Delay(150);
-
-	lcd_send_cmd(0x11); // Sleep out
-	HAL_Delay(150);
-
-	lcd_send_cmd(0x3A); // Color mode
-	lcd_send_data(0x05); // 16-bit
-
-	lcd_send_cmd(0x36); // MADCTL
-	lcd_send_data(0xC0); // <- MX + MY + RGB
-
-	lcd_send_cmd(0x29); // Display on
-	HAL_Delay(10);
-}
-
-void lcd_fill_screen(uint16_t color) {
-	uint8_t hi = color >> 8;
-	uint8_t lo = color & 0xFF;
-
-	// Set address window
-	lcd_send_cmd(0x2A);
-	uint8_t data_x[] = { 0x00, 0x00, 0x00, 0x7F };
-	lcd_send_data_array(data_x, 4);
-
-	lcd_send_cmd(0x2B);
-	uint8_t data_y[] = { 0x00, 0x00, 0x00, 0x9F };
-	lcd_send_data_array(data_y, 4);
-
-	lcd_send_cmd(0x2C); // RAMWR
-
-	// send colors
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET); // DC high
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_RESET); // CS low
-
-	for (int i = 0; i < 128 * 160; i++) {
-		uint8_t pix[2] = { hi, lo };
-		HAL_SPI_Transmit(&hspi1, pix, 2, HAL_MAX_DELAY);
-	}
-
-	HAL_GPIO_WritePin(GPIOB, GPIO_PIN_2, GPIO_PIN_SET); // CS high
-}
-
 /* USER CODE END 0 */
 
 /**
@@ -186,7 +105,6 @@ int main(void) {
 	MX_USART2_UART_Init();
 	MX_ADC1_Init();
 	/* USER CODE BEGIN 2 */
-//  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_12, GPIO_PIN_RESET);
 	HAL_ADC_Start(&hadc1);
 
 	{
@@ -199,12 +117,8 @@ int main(void) {
 
 	ST7735_Init();
 	ST7735_FillScreen(ST7735_BLACK);
-	ST7735_WriteString(0, 0, "init abc xyz 123456789 987651236 %^@&#!*#!@#", Font_11x18, ST7735_YELLOW, ST7735_BLACK);
-
-//	void draw_moving_line(uint8_t y) {
-//		ST7735_FillScreen(ST7735_BLACK);
-//		ST7735_FillRectangle(0, y, ST7735_WIDTH, 2, ST7735_RED);
-//	}
+	ST7735_WriteString(0, 0, "init abc xyz 123456789 987651236 %^@&#!*#!@#",
+			Font_11x18, ST7735_YELLOW, ST7735_BLACK);
 
 	uint8_t last_y = 255;
 	/* USER CODE END 2 */
